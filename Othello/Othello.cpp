@@ -291,22 +291,16 @@ bool CheckAround(int x, int y)
             {
                 Pos path[BOARD_SIZE];
                 int p = 0;
-                int startIdx = p;
 
-                path[p++] = Pos(checkX, checkY); // 그 위치를 path에 저장 후 한 칸 이동
-                checkX += checkAround[k].x;
-                checkY += checkAround[k].y;
-
-
-                while (board[checkY][checkX] != 0) // 가다가 비어있지 않았다면 계속 루프
+                do 
                 {
-                    if (board[checkY][checkX] == player)
-                        break;
-
-                    path[p++] = Pos(checkX, checkY); // 그 위치를 path에 저장 후 한 칸 이동
+                    path[p++] = Pos(checkX, checkY);
                     checkX += checkAround[k].x;
                     checkY += checkAround[k].y;
-                }
+                    
+                    if (board[checkY][checkX] == player)
+                        break;
+                } while (board[checkY][checkX] != 0);
 
                 int idx = 0;
                 if (board[checkY][checkX] != 0)
