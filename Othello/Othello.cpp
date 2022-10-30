@@ -11,8 +11,13 @@
 
 #define MAX_LOADSTRING          100
 #define NUM_OF_PLAYERS          2
+#define MAX_PLACEMENT           BOARD_SIZE * BOARD_SIZE
 
-int player = 1;
+int player = 2; // 1 : 회색, 2 : 검은색
+int playerNumOfPlacement[NUM_OF_PLAYERS] = { 2, 2 };
+
+// https://ko.wikipedia.org/wiki/%EC%98%A4%EB%8D%B8%EB%A1%9C
+// 매 턴마다 
 
 typedef struct _pos
 {
@@ -23,6 +28,10 @@ typedef struct _pos
 
 Pos cellPos[BOARD_SIZE][BOARD_SIZE];
 int board[BOARD_SIZE][BOARD_SIZE];
+
+Pos checkAround[8] = { {0,-1}, {1,-1}, {1,0}, {1,1}, {0, 1}, {-1, 1}, {-1, 0}, {-1, -1} };
+
+bool CheckAround(int x, int y);
 
 // 전역 변수:
 HINSTANCE hInst;                                // 현재 인스턴스입니다.
@@ -121,6 +130,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
     switch (message)
     {
+    case WM_CREATE:
+        board[3][3] = 1;
+        board[4][4] = 1;
+        board[3][4] = 2;
+        board[4][3] = 2;
+        break;
     case WM_COMMAND:
         {
             int wmId = LOWORD(wParam);
@@ -200,6 +215,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
             if (board[y][x] == 0)
             {
+                if (CheckAround(x, y) == false)
+                    break;
                 board[y][x] = player;
                 player = (player % 2) + 1;
                 InvalidateRect(hWnd, NULL, FALSE);
@@ -220,11 +237,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             y = mousePos.y / CELL_SIZE;
 
             moving = true;
+            InvalidateRect(hWnd, NULL, FALSE);
         }
         else
             moving = false;
         
-        InvalidateRect(hWnd, NULL, FALSE);
         break;
     }
     case WM_DESTROY:
@@ -253,4 +270,58 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         break;
     }
     return (INT_PTR)FALSE;
+}
+
+bool CheckAround(int x, int y)
+{
+    bool placeable = false;
+
+ 
+    // 모든 방향 체크
+    for (int k = 0; k < 8; k++)
+    {
+        int checkX = checkAround[k].x + x;
+        int checkY = checkAround[k].y + y;
+
+        if (0 < checkX && checkX < BOARD_SIZE && 0 < checkY && checkY < BOARD_SIZE)
+        {
+            int opponent = (player % 2) + 1;
+
+            if (board[checkY][checkX] == opponent) // 체크할 방향에 적이 있다면 
+            {
+                Pos path[BOARD_SIZE];
+                int p = 0;
+                int startIdx = p;
+
+                path[p++] = Pos(checkX, checkY); // 그 위치를 path에 저장 후 한 칸 이동
+                checkX += checkAround[k].x;
+                checkY += checkAround[k].y;
+
+
+                while (board[checkY][checkX] != 0) // 가다가 비어있지 않았다면 계속 루프
+                {
+                    if (board[checkY][checkX] == player)
+                        break;
+
+                    path[p++] = Pos(checkX, checkY); // 그 위치를 path에 저장 후 한 칸 이동
+                    checkX += checkAround[k].x;
+                    checkY += checkAround[k].y;
+                }
+
+                int idx = 0;
+                if (board[checkY][checkX] != 0)
+                {
+                    placeable = true;
+                    while (idx < p)
+                    {
+                        board[path[idx].y][path[idx].x] = player;
+                        idx++;
+                    }
+                }
+            }
+        }
+    }
+        
+    
+    return placeable;
 }
