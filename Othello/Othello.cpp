@@ -157,7 +157,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             PAINTSTRUCT ps;
             hdc = BeginPaint(hWnd, &ps);
 
-
+            wchar_t scoreStr[100];
+            swprintf_s(scoreStr, L"백:%d vs 흑:%d", playerNumOfPlacement[0], playerNumOfPlacement[1]);
+            TextOut(hdc, 800, 800, scoreStr, _tcslen(scoreStr));
 
             for (int i = 0; i < BOARD_SIZE; i++)
             {
@@ -185,8 +187,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 }
             }
           
-           // wchar_t scoreStr[100];
-           // swprintf_s(scoreStr, L"%d, %d", mousePos.x, mousePos.y);
             if (moving)
             {
                 if (board[y][x] == 0)
@@ -308,6 +308,8 @@ bool CheckAround(int x, int y)
                     placeable = true;
                     while (idx < p)
                     {
+                        playerNumOfPlacement[player-1]++;
+                        playerNumOfPlacement[opponent-1]--;
                         board[path[idx].y][path[idx].x] = player;
                         idx++;
                     }
@@ -316,6 +318,8 @@ bool CheckAround(int x, int y)
         }
     }
         
+    if(placeable)
+        playerNumOfPlacement[player - 1]++;
     
     return placeable;
 }
