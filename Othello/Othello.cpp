@@ -15,9 +15,15 @@
 
 int player = 2; // 1 : 회색, 2 : 검은색
 int playerNumOfPlacement[NUM_OF_PLAYERS] = { 2, 2 };
+int total = 4;
 
 // https://ko.wikipedia.org/wiki/%EC%98%A4%EB%8D%B8%EB%A1%9C
-// 매 턴마다 
+// 게임 종료 조건
+// 1. 64개 놓았을 경우
+// 2. 어느 한 쪽이 돌을 모두 뒤집은 경우
+// 3. 한 차례에 양 쪽 모두 서로 차례를 넘겨야 하는 경우
+// 게임이 끝났을 때 돌이 많은 플레이어가 승. 
+// 돌이 뒤집을 곳이 없는 경우 차례가 자동적으로 상대방에게 넘어감
 
 typedef struct _pos
 {
@@ -158,7 +164,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             hdc = BeginPaint(hWnd, &ps);
 
             wchar_t scoreStr[100];
-            swprintf_s(scoreStr, L"백:%d vs 흑:%d", playerNumOfPlacement[0], playerNumOfPlacement[1]);
+            swprintf_s(scoreStr, L"                                             ");
+            TextOut(hdc, 800, 800, scoreStr, _tcslen(scoreStr));
+            swprintf_s(scoreStr, L"백:%d vs 흑:%d, 전체 수:%d", playerNumOfPlacement[0], playerNumOfPlacement[1], total);
             TextOut(hdc, 800, 800, scoreStr, _tcslen(scoreStr));
 
             for (int i = 0; i < BOARD_SIZE; i++)
@@ -217,6 +225,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             {
                 if (CheckAround(x, y) == false)
                     break;
+                total++;
                 board[y][x] = player;
                 player = (player % 2) + 1;
                 InvalidateRect(hWnd, NULL, FALSE);
